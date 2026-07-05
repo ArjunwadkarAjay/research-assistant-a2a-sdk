@@ -1,0 +1,16 @@
+[project]
+name = "research-assitant-a2a-sdk"
+version = "0.1.0"
+description = "Multi-agent research and writing demo with A2A-style discovery and delegation"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "httpx",
+  "pydantic",
+  "pytest",
+  "duckduckgo-search",
+  "streamlit",
+  "requests",
+]
