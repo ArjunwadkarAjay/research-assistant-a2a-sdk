@@ -3,7 +3,7 @@ services:
     image: searxng/searxng:latest
     container_name: searxng
     environment:
-      SEARXNG_BASE_URL: http://localhost:8080/
+      SEARXNG_BASE_URL: http://localhost:8888/
     ports:
       - "8888:8080"
     volumes:
@@ -27,7 +27,7 @@ services:
       PORT: 8002
       WRITER_AGENT_URL: http://writer:8001
       RESEARCHER_AGENT_URL: http://researcher:8002
-      SEARXNG_URL: http://host.docker.internal:8888
+      SEARXNG_URL: http://searxng:8080
     depends_on:
       - writer
       - searxng
