@@ -4,11 +4,6 @@ from typing import Any, Dict, List
 import httpx
 from fastapi import FastAPI, HTTPException
 
-try:
-    from duckduckgo_search import DDGS
-except ImportError:  # pragma: no cover - optional dependency fallback
-    DDGS = None
-
 app = FastAPI(title="Researcher Agent")
 
 WRITER_AGENT_URL = os.getenv("WRITER_AGENT_URL", "http://localhost:8001")
@@ -16,12 +11,22 @@ RESEARCHER_AGENT_URL = os.getenv("RESEARCHER_AGENT_URL", "http://localhost:8002"
 
 
 def perform_research(topic: str) -> str:
-    if DDGS is not None:
+    searxng_url = os.getenv("SEARXNG_URL", "").strip() or os.getenv("SEARXNG_BASE_URL", "http://localhost:8888").strip()
+    if searxng_url:
         try:
-            with DDGS() as ddgs:
-                results = list(ddgs.text(topic, max_results=3))
+            response = httpx.get(
+                f"{searxng_url.rstrip('/')}/search",
+                params={"q": topic, "format": "json", "categories": "general"},
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            results = payload.get("results", [])
             if results:
-                snippets = [f"- {item.get('title', topic)}: {item.get('body', '')}" for item in results]
+                snippets = [
+                    f"- {item.get('title', topic)}: {item.get('content', item.get('url', ''))}"
+                    for item in results[:3]
+                ]
                 return f"Research for {topic}:\n" + "\n".join(snippets)
         except Exception:
             pass

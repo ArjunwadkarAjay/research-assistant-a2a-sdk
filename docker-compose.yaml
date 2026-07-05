@@ -1,4 +1,16 @@
 services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    environment:
+      SEARXNG_BASE_URL: http://localhost:8080/
+    ports:
+      - "8888:8080"
+    volumes:
+      - ./searxng/config/:/etc/searxng/
+      - ./searxng/data/:/var/cache/searxng/
+    restart: unless-stopped
+
   writer:
     build: .
     command: uvicorn apps.writer.main:app --host 0.0.0.0 --port 8001
@@ -15,8 +27,10 @@ services:
       PORT: 8002
       WRITER_AGENT_URL: http://writer:8001
       RESEARCHER_AGENT_URL: http://researcher:8002
+      SEARXNG_URL: http://host.docker.internal:8888
     depends_on:
       - writer
+      - searxng
     ports:
       - "8002:8002"
 
@@ -31,3 +45,4 @@ services:
       - researcher
     ports:
       - "8501:8501"
+

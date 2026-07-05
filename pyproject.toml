@@ -10,7 +10,6 @@ dependencies = [
   "httpx",
   "pydantic",
   "pytest",
-  "duckduckgo-search",
   "streamlit",
   "requests",
 ]

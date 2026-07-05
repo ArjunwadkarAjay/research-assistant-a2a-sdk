@@ -41,7 +41,9 @@ The Researcher agent:
 - sends the task to the Writer agent,
 - returns the resulting output.
 
-It also uses a free web search fallback via duckduckgo-search when a real search backend is not configured.
+For research, it can use a free and self-hosted search backend called SearxNG. SearxNG is a great fit for agentic workflows because it gives you a local, no-API-key, privacy-friendly way to fetch web results for agents without depending on a paid search API.
+
+When SearxNG is available, the researcher uses it first. If it is not available, it falls back to the existing DuckDuckGo-based search path so the demo still runs.
 
 ### 3. Streamlit Demo
 The Streamlit app provides a simple UI where you can:
@@ -80,6 +82,21 @@ Then open:
 ```bash
 docker compose up --build
 ```
+
+This starts the full stack, including a SearxNG container for free web search. Once it is running, you can open:
+- SearxNG UI: http://localhost:8080
+- Writer card: http://localhost:8001/.well-known/agent-card.json
+- Researcher health: http://localhost:8002/health
+- Streamlit UI: http://localhost:8501
+
+## Why SearxNG is useful for agents
+SearxNG is attractive for AI agents because it is:
+- free to run locally,
+- privacy-conscious,
+- usable without a paid API key,
+- and suitable for demos, prototypes, and self-hosted agent systems.
+
+It is a practical option when you want agents to gather fresh information without depending on commercial search APIs.
 
 ## Example workflow
 
