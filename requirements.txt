@@ -5,3 +5,5 @@ pydantic
 pytest
 streamlit
 requests
+litellm
+python-dotenv

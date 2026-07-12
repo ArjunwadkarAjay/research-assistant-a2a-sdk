@@ -12,4 +12,5 @@ dependencies = [
   "pytest",
   "streamlit",
   "requests",
+  "litellm>=1.91.0",
 ]

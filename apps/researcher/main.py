@@ -2,7 +2,10 @@ import os
 from typing import Any, Dict, List
 
 import httpx
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+
+load_dotenv()
 
 app = FastAPI(title="Researcher Agent")
 
@@ -32,23 +35,26 @@ def _build_fallback_research(topic: str, reason: str = "search backend unavailab
     )
 
 
-def _extract_search_results(payload: Dict[str, Any]) -> List[Dict[str, str]]:
+def _extract_search_results(payload: Dict[str, Any], max_results: int = 10) -> List[Dict[str, str]]:
     results = payload.get("results") or payload.get("items") or []
     if not isinstance(results, list):
         return []
 
     normalized: List[Dict[str, str]] = []
-    for item in results[:5]:
+    for item in results:
         if not isinstance(item, dict):
             continue
         title = item.get("title") or item.get("name") or "Search result"
         content = item.get("content") or item.get("snippet") or item.get("description") or item.get("url") or ""
         url = item.get("url") or item.get("link") or ""
         normalized.append({"title": str(title), "content": str(content), "url": str(url)})
+        if len(normalized) >= max_results:
+            break
     return normalized
 
 
-def perform_research(topic: str) -> str:
+def perform_research(topic: str, result_count: int = 3) -> str:
+    result_count = max(1, min(result_count, 10))
     searxng_url = _resolve_searxng_url()
     if searxng_url:
         try:
@@ -63,11 +69,11 @@ def perform_research(topic: str) -> str:
             )
             response.raise_for_status()
             payload = response.json()
-            results = _extract_search_results(payload)
+            results = _extract_search_results(payload, max_results=result_count)
             if results:
                 snippets = [
                     f"- {item['title']}: {item['content'] or item['url']}"
-                    for item in results[:3]
+                    for item in results
                 ]
                 return f"Research for {topic}:\n" + "\n".join(snippets)
             return _build_fallback_research(topic, "the search backend returned no usable results")
@@ -112,8 +118,13 @@ async def discover_writer() -> Dict[str, Any]:
 
 
 @app.get("/research/{topic}")
-async def run_research_workflow(topic: str, task_name: str = "format-report", tone: str = "professional"):
-    data = perform_research(topic)
+async def run_research_workflow(
+    topic: str,
+    task_name: str = "format-report",
+    tone: str = "professional",
+    count: int = 3,
+):
+    data = perform_research(topic, result_count=count)
     writer_card = await read_writer_card()
     writer_response = await delegate_to_writer(data, task_name, tone)
     return {

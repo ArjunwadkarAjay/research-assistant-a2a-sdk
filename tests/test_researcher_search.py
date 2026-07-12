@@ -83,3 +83,32 @@ def test_perform_research_uses_structured_fallback_when_search_fails(monkeypatch
     assert "Topic:" in result
     assert "agent frameworks" in result
     assert "Potential angle" in result
+
+
+def test_perform_research_returns_requested_number_of_results(monkeypatch):
+    monkeypatch.delenv("SEARXNG_URL", raising=False)
+    monkeypatch.delenv("SEARXNG_BASE_URL", raising=False)
+
+    class MockResponse:
+        def __init__(self, payload):
+            self._payload = payload
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return self._payload
+
+    payload = {
+        "results": [
+            {"title": f"Result {i}", "content": f"Content {i}"}
+            for i in range(1, 7)
+        ]
+    }
+
+    with patch("apps.researcher.main.httpx.get", return_value=MockResponse(payload)):
+        result = researcher_main.perform_research("python", result_count=5)
+
+    assert result.count("- Result") == 5
+    assert "Result 5" in result
+    assert "Result 6" not in result
